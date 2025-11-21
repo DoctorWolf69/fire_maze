@@ -69,7 +69,7 @@ def plot_maze_state(maze, fire_time, current_time, player_pos, exit_pos, path=No
     ]
     cmap = ListedColormap(colors)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(5, 5))
     ax.imshow(grid, cmap=cmap, interpolation="nearest")
 
     # Pixel gridlines
@@ -92,7 +92,7 @@ def plot_heatmap(matrix, title, invalid_value=INF):
     mat = matrix.astype(float).copy()
     mat[mat >= invalid_value] = np.nan
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(4.5, 4))
     im = ax.imshow(mat, interpolation="nearest")
     ax.set_title(title)
     ax.set_xticks([])
