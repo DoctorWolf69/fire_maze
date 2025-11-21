@@ -23,13 +23,14 @@ def build_category_grid(maze, fire_time, current_time, player_pos, exit_pos, pat
     # walls
     grid[maze == 1] = 1
 
-    # fire
+    # fire (cells that have caught fire up to current_time)
     burning = fire_time <= current_time
     grid[burning & (maze == 0)] = 2
 
     # path
     if path:
         for (r, c) in path:
+            # don't overwrite walls, exit, player
             if grid[r, c] == 0:
                 grid[r, c] = 5
 
@@ -46,23 +47,24 @@ def build_category_grid(maze, fire_time, current_time, player_pos, exit_pos, pat
 
 def plot_maze_state(maze, fire_time, current_time, player_pos, exit_pos, path=None):
     """
-    High-contrast 'game style' visualization.
+    High-contrast 'game style' visualization with pixel-grid look.
     """
     grid = build_category_grid(maze, fire_time, current_time, player_pos, exit_pos, path)
+    rows, cols = grid.shape
 
-    # Define colors:
-    # 0 empty  -> light gray
-    # 1 wall   -> black
-    # 2 fire   -> bright red
-    # 3 player -> cyan
-    # 4 exit   -> yellow
-    # 5 path   -> magenta
+    # Game-style neon palette:
+    # 0 empty  -> light metal gray
+    # 1 wall   -> near-black
+    # 2 fire   -> neon red
+    # 3 player -> cyan glow
+    # 4 exit   -> gold
+    # 5 path   -> neon magenta
     colors = [
-        "#E0E0E0",  # empty
-        "#000000",  # wall
-        "#FF0000",  # fire
-        "#00FFFF",  # player
-        "#FFFF00",  # exit
+        "#C8C8C8",  # empty
+        "#1A1A1A",  # wall
+        "#FF2B2B",  # fire
+        "#00E5FF",  # player
+        "#FFD700",  # exit
         "#FF00FF",  # path
     ]
     cmap = ListedColormap(colors)
@@ -70,8 +72,14 @@ def plot_maze_state(maze, fire_time, current_time, player_pos, exit_pos, path=No
     fig, ax = plt.subplots()
     ax.imshow(grid, cmap=cmap, interpolation="nearest")
 
-    ax.set_xticks([])
-    ax.set_yticks([])
+    # Pixel gridlines
+    ax.set_xticks(np.arange(-0.5, cols, 1))
+    ax.set_yticks(np.arange(-0.5, rows, 1))
+    ax.grid(color="#444444", linewidth=0.5)
+
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+
     ax.set_title(f"Maze State at t = {current_time}")
     return fig
 
@@ -96,13 +104,13 @@ def plot_heatmap(matrix, title, invalid_value=INF):
 def compute_player_distance_and_safety(maze, fire_time, player_start):
     """
     Returns:
-      dist_player: distance from player ignoring fire
+      dist_player: distance from player ignoring fire (BFS)
       safety_margin: fire_time - dist_player (where both finite)
     """
     dist_player = bfs_player_no_fire(maze, player_start)
     safety_margin = fire_time.astype(float) - dist_player.astype(float)
 
-    # Where dist_player is INF, set safety_margin to INF for clarity
+    # Where player can't reach or fire never reaches, mark as INF
     mask = (dist_player >= INF) | (fire_time >= INF)
     safety_margin[mask] = INF
 
