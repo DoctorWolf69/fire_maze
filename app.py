@@ -28,8 +28,6 @@ def init_session_state():
         st.session_state.current_t = 0
     if "auto_play" not in st.session_state:
         st.session_state.auto_play = False
-    if "time_slider" not in st.session_state:
-        st.session_state.time_slider = 0
 
 
 def main():
@@ -71,7 +69,6 @@ def main():
                 st.session_state.sim_result = None
                 st.session_state.current_t = 0
                 st.session_state.auto_play = False
-                st.session_state.time_slider = 0
 
         if st.button("Run Dynamic Simulation"):
             if st.session_state.maze is None:
@@ -85,10 +82,11 @@ def main():
                     max_steps=max_steps,
                 )
                 st.session_state.sim_result = sim_result
-                # start viewing from t = 0
+                # start viewing from t = 0 if we have steps
                 if len(sim_result.steps) > 0:
                     st.session_state.current_t = sim_result.steps[0].time
-                    st.session_state.time_slider = st.session_state.current_t
+                else:
+                    st.session_state.current_t = 0
                 st.session_state.auto_play = False
 
     # ================= MAIN LAYOUT =================
@@ -126,22 +124,19 @@ def main():
                 else:
                     max_t = steps[-1].time
 
-                    # --- Time control bar (slider + arrows + play/pause) ---
-                    # Keep current_t inside [0, max_t]
+                    # Clamp current_t inside [0, max_t]
                     st.session_state.current_t = min(
                         max(st.session_state.current_t, 0), max_t
                     )
-                    st.session_state.time_slider = st.session_state.current_t
 
                     st.markdown("### Time Control")
 
-                    # Slider synced with current_t
+                    # Slider uses current_t as value, no key bound to session_state
                     t = st.slider(
                         "Time step",
                         0,
                         max_t,
-                        st.session_state.time_slider,
-                        key="time_slider",
+                        st.session_state.current_t,
                     )
                     st.session_state.current_t = t
 
@@ -153,14 +148,12 @@ def main():
                             st.session_state.current_t = max(
                                 st.session_state.current_t - 1, 0
                             )
-                            st.session_state.time_slider = st.session_state.current_t
 
                     with bcol2:
                         if st.button("Next Step ▶️"):
                             st.session_state.current_t = min(
                                 st.session_state.current_t + 1, max_t
                             )
-                            st.session_state.time_slider = st.session_state.current_t
 
                     with bcol3:
                         if st.button("▶ Play"):
@@ -201,15 +194,11 @@ def main():
                     )
 
                     # Auto-play: advance frame-by-frame while not finished
-                    if (
-                        st.session_state.auto_play
-                        and st.session_state.current_t < max_t
-                    ):
+                    if st.session_state.auto_play and st.session_state.current_t < max_t:
                         import time as _time
 
                         _time.sleep(0.25)  # control speed
                         st.session_state.current_t += 1
-                        st.session_state.time_slider = st.session_state.current_t
                         st.experimental_rerun()
 
     # ---------- RIGHT: Analytics ----------
