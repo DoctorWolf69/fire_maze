@@ -157,7 +157,11 @@ def main():
 
                     # ---------- GET STEP ----------
                     valid_steps = [s for s in steps if s.time <= t]
-                    current_step = max(valid_steps, key=lambda s: s.time)
+
+                    if not valid_steps:
+                        current_step = steps[0]     # fallback to first step
+                    else:
+                        current_step = max(valid_steps, key=lambda s: s.time)
 
                     player_pos = current_step.player_pos
                     path = current_step.path
