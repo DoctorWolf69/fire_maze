@@ -1,4 +1,3 @@
-# player_bfs.py
 import numpy as np
 from collections import deque
 from utils import INF, DIRECTIONS, in_bounds, BFSStats
@@ -89,7 +88,6 @@ def bfs_player_no_fire(maze, start):
     """
     rows, cols = maze.shape
     dist = np.full((rows, cols), INF, dtype=int)
-    from collections import deque
     q = deque()
     sr, sc = start
     if maze[sr, sc] == 1:

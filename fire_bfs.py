@@ -1,4 +1,3 @@
-# fire_bfs.py
 import numpy as np
 from collections import deque
 from utils import INF, DIRECTIONS, in_bounds
@@ -15,6 +14,10 @@ def compute_fire_times(maze, fire_sources):
     rows, cols = maze.shape
     fire_time = np.full((rows, cols), INF, dtype=int)
     q = deque()
+
+    if not fire_sources:
+        # No fire sources at all -> fire never reaches anywhere
+        return fire_time
 
     # Initialize queue with all fire sources
     for (r, c) in fire_sources:

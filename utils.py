@@ -1,6 +1,3 @@
-# utils.py
-from collections import deque
-
 INF = 10**9
 
 # 4-directional movement

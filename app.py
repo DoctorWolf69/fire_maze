@@ -62,6 +62,14 @@ def main():
                 )
             except ValueError:
                 st.error("Maze too dense to place player/exit/fires. Reduce wall density.")
+                # Clear state so we don't keep any stale maze
+                st.session_state.maze = None
+                st.session_state.player_start = None
+                st.session_state.exit_pos = None
+                st.session_state.fire_sources = None
+                st.session_state.sim_result = None
+                st.session_state.current_t = 0
+                st.session_state.auto_play = False
             else:
                 st.session_state.maze = maze
                 st.session_state.player_start = player_start
@@ -76,6 +84,8 @@ def main():
         if st.button("Run Dynamic Simulation"):
             if st.session_state.maze is None:
                 st.warning("Generate a maze first.")
+            elif not st.session_state.fire_sources:
+                st.warning("No fire sources available. Generate a new maze.")
             else:
                 sim_result = run_dynamic_simulation(
                     st.session_state.maze,
@@ -104,16 +114,19 @@ def main():
             exit_pos = st.session_state.exit_pos
 
             if st.session_state.sim_result is None:
-                fire_time = compute_fire_times(maze, st.session_state.fire_sources)
-                fig = plot_maze_state(
-                    maze,
-                    fire_time,
-                    current_time=0,
-                    player_pos=player_start,
-                    exit_pos=exit_pos,
-                    path=None,
-                )
-                st.pyplot(fig)
+                if not st.session_state.fire_sources:
+                    st.warning("No fire sources set. Generate a new maze.")
+                else:
+                    fire_time = compute_fire_times(maze, st.session_state.fire_sources)
+                    fig = plot_maze_state(
+                        maze,
+                        fire_time,
+                        current_time=0,
+                        player_pos=player_start,
+                        exit_pos=exit_pos,
+                        path=None,
+                    )
+                    st.pyplot(fig)
 
             else:
                 sim_result = st.session_state.sim_result
@@ -199,6 +212,8 @@ def main():
                         import time as _time
 
                         _time.sleep(0.18)
+                        # New API name in latest Streamlit is st.rerun(), but
+                        # experimental_rerun still works in many versions.
                         st.session_state.current_t += 1
                         st.experimental_rerun()
 
@@ -218,7 +233,11 @@ def main():
                 st.write("**BFS Operation Counts:**")
                 st.json(bfs_ops)
             else:
-                fire_time = compute_fire_times(maze, st.session_state.fire_sources)
+                if not st.session_state.fire_sources:
+                    st.warning("No fire sources set. Generate a new maze.")
+                    fire_time = np.full_like(maze, INF)
+                else:
+                    fire_time = compute_fire_times(maze, st.session_state.fire_sources)
 
             dist_player, safety_margin = compute_player_distance_and_safety(
                 maze, fire_time, player_start
@@ -241,7 +260,7 @@ def main():
 
     st.markdown("---")
     st.caption("DAA Project - Fire in the Maze (Dynamic BFS under spreading fire)")
-
+    
 
 if __name__ == "__main__":
     main()

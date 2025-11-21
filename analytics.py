@@ -1,4 +1,3 @@
-# analytics.py
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -53,19 +52,13 @@ def plot_maze_state(maze, fire_time, current_time, player_pos, exit_pos, path=No
     rows, cols = grid.shape
 
     # Game-style neon palette:
-    # 0 empty  -> light metal gray
-    # 1 wall   -> near-black
-    # 2 fire   -> neon red
-    # 3 player -> cyan glow
-    # 4 exit   -> gold
-    # 5 path   -> neon magenta
     colors = [
-        "#C8C8C8",  # empty
-        "#1A1A1A",  # wall
-        "#FF2B2B",  # fire
-        "#00E5FF",  # player
-        "#FFD700",  # exit
-        "#FF00FF",  # path
+        "#C8C8C8",  # 0 empty
+        "#1A1A1A",  # 1 wall
+        "#FF2B2B",  # 2 fire
+        "#00E5FF",  # 3 player
+        "#FFD700",  # 4 exit
+        "#FF00FF",  # 5 path
     ]
     cmap = ListedColormap(colors)
 
@@ -89,7 +82,7 @@ def plot_heatmap(matrix, title, invalid_value=INF):
     Generic heatmap for fire_time / distances / safety margin.
     Replaces INF with NaN so they show as blank.
     """
-    mat = matrix.astype(float).copy()
+    mat = np.array(matrix, dtype=float)
     mat[mat >= invalid_value] = np.nan
 
     fig, ax = plt.subplots(figsize=(3.8, 3.4))

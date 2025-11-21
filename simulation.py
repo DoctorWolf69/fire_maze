@@ -1,4 +1,3 @@
-# simulation.py
 from dataclasses import dataclass, field
 from typing import List, Tuple, Dict, Optional
 
@@ -23,7 +22,7 @@ class SimulationResult:
     status: str = "TRAPPED"
     total_time: int = 0
     bfs_op_counts: Dict[str, int] = field(default_factory=dict)
-    fire_time: np.ndarray = None
+    fire_time: Optional[np.ndarray] = None
 
 
 def run_dynamic_simulation(maze,
@@ -48,7 +47,7 @@ def run_dynamic_simulation(maze,
     total_node_expansions = 0
     total_queue_pushes = 0
 
-    for step_idx in range(max_steps):
+    for _ in range(max_steps):
         # If already at exit
         if player_pos == exit_pos:
             status = "ESCAPED"
