@@ -27,6 +27,8 @@ def init_session_state():
         st.session_state.current_t = 0
     if "auto_play" not in st.session_state:
         st.session_state.auto_play = False
+    if "time_slider_key" not in st.session_state:
+        st.session_state.time_slider_key = "time_slider_0"
 
 
 def main():
@@ -68,6 +70,8 @@ def main():
                 st.session_state.sim_result = None
                 st.session_state.current_t = 0
                 st.session_state.auto_play = False
+                # Change the slider key so Streamlit drops old slider state between runs.
+                st.session_state.time_slider_key = f"time_slider_{np.random.randint(0, 1_000_000)}"
 
         if st.button("Run Dynamic Simulation"):
             if st.session_state.maze is None:
@@ -83,6 +87,7 @@ def main():
                 st.session_state.sim_result = sim_result
                 st.session_state.current_t = 0
                 st.session_state.auto_play = False
+                st.session_state.time_slider_key = f"time_slider_{np.random.randint(0, 1_000_000)}"
 
     # ================= MAIN LAYOUT =================
     col1, col2 = st.columns([2, 1])
@@ -131,7 +136,7 @@ def main():
                         min_value=0,
                         max_value=max_t,
                         value=st.session_state.current_t,
-                        key="current_t",
+                        key=st.session_state.time_slider_key,
                     )
                     st.session_state.current_t = int(t)
 
