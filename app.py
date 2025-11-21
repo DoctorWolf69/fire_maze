@@ -82,11 +82,7 @@ def main():
                     max_steps=max_steps,
                 )
                 st.session_state.sim_result = sim_result
-                # start viewing from t = 0 if we have steps
-                if len(sim_result.steps) > 0:
-                    st.session_state.current_t = sim_result.steps[0].time
-                else:
-                    st.session_state.current_t = 0
+                st.session_state.current_t = 0
                 st.session_state.auto_play = False
 
     # ================= MAIN LAYOUT =================
@@ -103,7 +99,6 @@ def main():
             player_start = st.session_state.player_start
             exit_pos = st.session_state.exit_pos
 
-            # If no simulation yet: show initial state (t=0)
             if st.session_state.sim_result is None:
                 fire_time = compute_fire_times(maze, st.session_state.fire_sources)
                 fig = plot_maze_state(
@@ -115,6 +110,7 @@ def main():
                     path=None,
                 )
                 st.pyplot(fig)
+
             else:
                 sim_result = st.session_state.sim_result
                 steps = sim_result.steps
@@ -124,54 +120,44 @@ def main():
                 else:
                     max_t = steps[-1].time
 
-                    # Clamp current_t inside [0, max_t]
                     st.session_state.current_t = min(
                         max(st.session_state.current_t, 0), max_t
                     )
 
                     st.markdown("### Time Control")
 
-                    # Slider uses current_t as value, no key bound to session_state
-                    t = st.slider(
-                        "Time step",
-                        0,
-                        max_t,
-                        st.session_state.current_t,
-                    )
+                    t = st.slider("Time step", 0, max_t, st.session_state.current_t)
                     st.session_state.current_t = t
 
-                    # Buttons row
+                    # ---------- TIME NAV BUTTONS ----------
                     bcol1, bcol2, bcol3, bcol4 = st.columns([1, 1, 1, 1])
 
                     with bcol1:
-                        if st.button("◀️ Prev Step"):
+                        if st.button("◀️ Prev"):
                             st.session_state.current_t = max(
                                 st.session_state.current_t - 1, 0
                             )
 
                     with bcol2:
-                        if st.button("Next Step ▶️"):
+                        if st.button("Next ▶️"):
                             st.session_state.current_t = min(
                                 st.session_state.current_t + 1, max_t
                             )
 
                     with bcol3:
                         if st.button("▶ Play"):
+                            st.session_state.current_t = 0   # ALWAYS RESET TO START
                             st.session_state.auto_play = True
 
                     with bcol4:
                         if st.button("❚❚ Pause"):
                             st.session_state.auto_play = False
 
-                    # Use the final current_t after buttons
                     t = st.session_state.current_t
 
-                    # Find the step with time <= t and closest to t
+                    # ---------- GET STEP ----------
                     valid_steps = [s for s in steps if s.time <= t]
-                    if valid_steps:
-                        current_step = max(valid_steps, key=lambda s: s.time)
-                    else:
-                        current_step = steps[0]
+                    current_step = max(valid_steps, key=lambda s: s.time)
 
                     player_pos = current_step.player_pos
                     path = current_step.path
@@ -187,17 +173,16 @@ def main():
                     )
                     st.pyplot(fig)
 
-                    st.markdown(f"**Status at t = {t}:** `{current_step.status}`")
+                    st.markdown(f"**Status at t={t}:** `{current_step.status}`")
                     st.markdown(
-                        f"**Final overall status:** `{sim_result.status}` "
-                        f"in `{sim_result.total_time}` steps"
+                        f"**Final Status:** `{sim_result.status}` "
+                        f" | **Time:** `{sim_result.total_time} steps`"
                     )
 
-                    # Auto-play: advance frame-by-frame while not finished
+                    # ---------- AUTOPLAY LOOP ----------
                     if st.session_state.auto_play and st.session_state.current_t < max_t:
                         import time as _time
-
-                        _time.sleep(0.25)  # control speed
+                        _time.sleep(0.18)
                         st.session_state.current_t += 1
                         st.experimental_rerun()
 
@@ -211,11 +196,10 @@ def main():
             maze = st.session_state.maze
             player_start = st.session_state.player_start
 
-            # Fire times from simulation if available; otherwise compute once
             if st.session_state.sim_result is not None:
                 fire_time = st.session_state.sim_result.fire_time
                 bfs_ops = st.session_state.sim_result.bfs_op_counts
-                st.write("**BFS Operation Counts (Dynamic run):**")
+                st.write("**BFS Operation Counts:**")
                 st.json(bfs_ops)
             else:
                 fire_time = compute_fire_times(maze, st.session_state.fire_sources)
@@ -224,25 +208,18 @@ def main():
                 maze, fire_time, player_start
             )
 
-            with st.expander("Heatmap: Fire Reach Time"):
-                fig_fire = plot_heatmap(fire_time, "Fire Reach Time (steps)")
-                st.pyplot(fig_fire)
+            with st.expander("🔥 Fire Reach Time Heatmap"):
+                st.pyplot(plot_heatmap(fire_time, "Fire Reach Time (steps)"))
 
-            with st.expander("Heatmap: Player Distance (ignoring fire)"):
-                fig_dist = plot_heatmap(
-                    dist_player, "Player Distance from Start", invalid_value=INF
-                )
-                st.pyplot(fig_dist)
+            with st.expander("📍 Player Distance Heatmap"):
+                st.pyplot(plot_heatmap(dist_player, "Distance from Start", invalid_value=INF))
 
-            with st.expander("Heatmap: Safety Margin (Fire time - Player distance)"):
-                fig_safe = plot_heatmap(
-                    safety_margin, "Safety Margin", invalid_value=INF
-                )
-                st.pyplot(fig_safe)
+            with st.expander("🛡 Safety Margin Heatmap"):
+                st.pyplot(plot_heatmap(safety_margin, "Safety Margin", invalid_value=INF))
 
     st.markdown("---")
     st.caption("DAA Project — Fire in the Maze (Dynamic BFS under spreading fire)")
-    
+
 
 if __name__ == "__main__":
     main()
